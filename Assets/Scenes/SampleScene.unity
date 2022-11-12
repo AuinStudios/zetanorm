@@ -12187,7 +12187,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1397460859}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.5055802, y: -3.4096546, z: 0}
+  m_LocalPosition: {x: -0.008, y: -0.52, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -12277,11 +12277,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Data: {fileID: 11400000, guid: d91c51c0a42ff784b97c0b038752b6f4, type: 2}
   RB: {fileID: 1732225759}
+  JumpForce: 0.05
+  HowLongJump: 0
   _groundCheckPoint: {fileID: 1397460860}
   _groundCheckSize: {x: 0.49, y: 0.03}
   MainCam: {fileID: 519420032}
-  SmoothTime: 0.115
-  cameraoffset: {x: 0, y: 3.64, z: -9.21}
+  SmoothTime: 0.094
+  cameraoffset: {x: 0, y: 2.74, z: -9.21}
   _groundLayer:
     serializedVersion: 2
     m_Bits: 8
