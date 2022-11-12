@@ -28,12 +28,13 @@ public sealed class movement : MonoBehaviour
     public float LastOnGroundTime { get; private set; }
     [SerializeField] private float JumpForce = 0.05f;
     [SerializeField] private float DashForce = 100.0f;
+    [SerializeField] private int MaxDashTimes = 2;
+    private int DashTimes = 0;
     private float HowLongJump = 0.0f;
-    
     #endregion
 
     #region INPUT PARAMETERS
-    private Vector2 _moveInput;
+   [SerializeField] private Vector2 _moveInput;
     #endregion
 
     #region CHECK PARAMETERS
@@ -42,7 +43,7 @@ public sealed class movement : MonoBehaviour
     [SerializeField] private Transform _groundCheckPoint;
     [SerializeField] private Vector2 _groundCheckSize = new Vector2(0.49f, 0.03f);
 
-    
+
 
     [Header("Camera")]
     [SerializeField]
@@ -83,31 +84,33 @@ public sealed class movement : MonoBehaviour
         if (_moveInput.x != 0)
             CheckDirectionToFace(_moveInput.x > 0);
         #endregion
-        if (_moveInput != new Vector2(0, 1)&&Input.GetKeyDown(KeyCode.LeftShift) )
+        if (DashTimes < MaxDashTimes && _moveInput != new Vector2(0, 1) && Input.GetKeyDown(KeyCode.LeftShift))
         {
-           
             Dash();
         }
+
         #region COLLISION CHECKS
         //Ground Check
-        if (Physics2D.OverlapBox(_groundCheckPoint.position, _groundCheckSize, 0, _groundLayer)) //checks if set box overlaps with ground
+        if (Physics2D.OverlapBox(_groundCheckPoint.position, _groundCheckSize, 0, _groundLayer))
+        {
+
+            DashTimes = 0;
             HowLongJump = 0;
-        LastOnGroundTime = 0.1f;
+            LastOnGroundTime = 0.1f;
+        }
+
         #endregion
 
     }
 
     private void FixedUpdate()
     {
+
         Run();
-        // if (Input.GetKeyDown(KeyCode.Space) && LastOnGroundTime == 0.1f)
-        // {
-        //     
-        //     Jump(checkforonejump , true);
-        //     checkforonejump = false;
-        // }
-      
-        if (Input.GetKey(KeyCode.Space)&& HowLongJump < 0.15f)
+
+        CameraMovement();
+
+        if (HowLongJump < 0.15f && Input.GetKey(KeyCode.Space))
         {
             Jump();
         }
@@ -118,19 +121,30 @@ public sealed class movement : MonoBehaviour
     }
 
     //MOVEMENT METHODS
-
+    private void CameraMovement()
+    {
+        desiredposition = transform.position + cameraoffset;
+        MainCam.position = Vector3.SmoothDamp(MainCam.position, desiredposition, ref smoothdampvelocity, SmoothTime);
+    }
     private void Dash()
     {
-        HowLongJump = 1;
-        Vector3.Normalize(_moveInput);
-        RB.AddForce(new Vector2(_moveInput.x  * DashForce , _moveInput.y * DashForce / DashForce) ,ForceMode2D.Impulse);
+        if (RB.velocity.y >0 || RB.velocity.y < 0)
+        {
+            DashTimes++;
+
+            Vector3.Normalize(_moveInput);
+            RB.AddForce(new Vector2(_moveInput.x * DashForce, _moveInput.y), ForceMode2D.Impulse);
+            HowLongJump = 1;
+        }
+
+
     }
     private void Jump()
     {
-     float force = JumpForce;
-     force += Time.deltaTime *2.5f;
-     HowLongJump += Time.deltaTime;
-     RB.AddForce(Vector2.up * force, ForceMode2D.Impulse);
+        float force = JumpForce;
+        force += Time.deltaTime * 2.5f;
+        HowLongJump += Time.deltaTime;
+        RB.AddForce(Vector2.up * force, ForceMode2D.Impulse);
     }
     #region RUN METHODS
     private void Run()
@@ -138,8 +152,7 @@ public sealed class movement : MonoBehaviour
         // Calculate the Jump
 
         // Callculate the camera smooth direction
-        desiredposition = transform.position + cameraoffset;
-        MainCam.position = Vector3.SmoothDamp(MainCam.position, desiredposition, ref smoothdampvelocity, SmoothTime);
+
 
         //Calculate the direction we want to move in and our desired velocity
         float targetSpeed = _moveInput.x * Data.runMaxSpeed;
@@ -150,9 +163,14 @@ public sealed class movement : MonoBehaviour
         //Gets an acceleration value based on if we are accelerating (includes turning) 
         //or trying to decelerate (stop). As well as applying a multiplier if we're air borne.
         if (LastOnGroundTime > 0)
+        {
             accelRate = (Mathf.Abs(targetSpeed) > 0.01f) ? Data.runAccelAmount : Data.runDeccelAmount;
+        }
         else
+        {
             accelRate = (Mathf.Abs(targetSpeed) > 0.01f) ? Data.runAccelAmount * Data.accelInAir : Data.runDeccelAmount * Data.deccelInAir;
+        }
+
         #endregion
 
 

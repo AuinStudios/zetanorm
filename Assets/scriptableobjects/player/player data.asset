@@ -12,11 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b09861ea5b9e38c4da0ceab878f77881, type: 3}
   m_Name: player data
   m_EditorClassIdentifier: 
-  runMaxSpeed: 7
-  runAcceleration: 0.2
-  runAccelAmount: 1.4285715
-  runDecceleration: 0.16
-  runDeccelAmount: 1.1428571
-  accelInAir: 0.01
-  deccelInAir: 1
+  runMaxSpeed: 6.3
+  runAcceleration: 0.3
+  runAccelAmount: 2.3809524
+  runDecceleration: 0.19
+  runDeccelAmount: 1.5079365
+  accelInAir: 0.251
+  deccelInAir: 0.296
   doConserveMomentum: 0
