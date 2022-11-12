@@ -26,10 +26,10 @@ public sealed class movement : MonoBehaviour
     //but can only be privately written to.
     public bool IsFacingRight { get; private set; }
     public float LastOnGroundTime { get; private set; }
-   
-    private bool checkforonejump = true;
-    [SerializeField] private float JumpForce = 0.1f;
-    [SerializeField] private float HowLongJump = 0;
+    [SerializeField] private float JumpForce = 0.05f;
+    [SerializeField] private float DashForce = 100.0f;
+    private float HowLongJump = 0.0f;
+    
     #endregion
 
     #region INPUT PARAMETERS
@@ -83,12 +83,15 @@ public sealed class movement : MonoBehaviour
         if (_moveInput.x != 0)
             CheckDirectionToFace(_moveInput.x > 0);
         #endregion
-
+        if (_moveInput != new Vector2(0, 1)&&Input.GetKeyDown(KeyCode.LeftShift) )
+        {
+           
+            Dash();
+        }
         #region COLLISION CHECKS
         //Ground Check
         if (Physics2D.OverlapBox(_groundCheckPoint.position, _groundCheckSize, 0, _groundLayer)) //checks if set box overlaps with ground
             HowLongJump = 0;
-            checkforonejump = true;
         LastOnGroundTime = 0.1f;
         #endregion
 
@@ -97,15 +100,16 @@ public sealed class movement : MonoBehaviour
     private void FixedUpdate()
     {
         Run();
-        if (Input.GetKeyDown(KeyCode.Space) && LastOnGroundTime == 0.1f)
+        // if (Input.GetKeyDown(KeyCode.Space) && LastOnGroundTime == 0.1f)
+        // {
+        //     
+        //     Jump(checkforonejump , true);
+        //     checkforonejump = false;
+        // }
+      
+        if (Input.GetKey(KeyCode.Space)&& HowLongJump < 0.15f)
         {
-            
-            Jump(checkforonejump , true);
-            checkforonejump = false;
-        }
-        if (Input.GetKey(KeyCode.Space)&& HowLongJump < 0.1f)
-        {
-            Jump(true , false);
+            Jump();
         }
         else if (Input.GetKeyUp(KeyCode.Space))
         {
@@ -115,17 +119,18 @@ public sealed class movement : MonoBehaviour
 
     //MOVEMENT METHODS
 
-    private void Jump(bool stopjump , bool ismid)
+    private void Dash()
     {
-        if (stopjump == true)
-        {
-            float force = JumpForce;
-            
-            force += Time.deltaTime *2.5f;
-            HowLongJump += Time.deltaTime;
-            RB.AddForce(Vector2.up * force, ForceMode2D.Impulse);
-            
-        }
+        HowLongJump = 1;
+        Vector3.Normalize(_moveInput);
+        RB.AddForce(new Vector2(_moveInput.x  * DashForce , _moveInput.y * DashForce / DashForce) ,ForceMode2D.Impulse);
+    }
+    private void Jump()
+    {
+     float force = JumpForce;
+     force += Time.deltaTime *2.5f;
+     HowLongJump += Time.deltaTime;
+     RB.AddForce(Vector2.up * force, ForceMode2D.Impulse);
     }
     #region RUN METHODS
     private void Run()
