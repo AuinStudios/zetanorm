@@ -46,7 +46,7 @@ public sealed class movement : MonoBehaviour
     [SerializeField] private Vector2 _groundCheckSize = new Vector2(0.49f, 0.03f);
     [Header("WallCheck")]
     [SerializeField] private Transform FrontCheck;
-    //  [SerializeField] private Transform BackCheck;
+     [SerializeField] private Transform BackCheck;
     [SerializeField] private Vector2 Wallchecksize = new Vector2(0.2f, 0.03f);
     [Header("Camera")]
     [SerializeField]
@@ -107,6 +107,10 @@ public sealed class movement : MonoBehaviour
         {
             StartCoroutine(WallMode());
         }
+        if(!Physics2D.OverlapBox(BackCheck.position, Wallchecksize, 0, _WallLayer) && isonwall == true)
+        {
+            isonwall = false;
+        }
         #endregion
 
     }
@@ -135,7 +139,6 @@ public sealed class movement : MonoBehaviour
 
         if (!isonwall && LastOnGroundTime != 0.1f)
         {
-            Debug.Log("a");
             isonwall = true;
             RB.isKinematic = true;
             RB.velocity = new Vector2(0, 0);
@@ -143,32 +146,33 @@ public sealed class movement : MonoBehaviour
             float timer = 0.0f;
             Turn();
 
-            yield return new WaitForSeconds(0.05f);
+            yield return new WaitForSeconds(0.1f);
             while (!Input.GetKeyDown(KeyCode.Space))
             {
+                
                 timer += Time.deltaTime;
-                Debug.Log("a");
                 if (timer > 0.5f && !doonce)
                 {
                     doonce = true;
                     RB.isKinematic = false;
                     RB.gravityScale = RB.gravityScale / 10;
                 }
-                else if (!isonwall)
+                if (!isonwall)
                 {
                     break;
                 }
                 yield return null;
             }
+            
+            RB.isKinematic = false;
+            RB.gravityScale = StartingGravity;
+            
             if (isonwall)
             {
-                RB.isKinematic = false;
-                RB.gravityScale = StartingGravity;
-                isonwall = false;
+               
                 RB.AddForce(transform.localScale * DashForce * 2, ForceMode2D.Impulse);
             }
-
-
+            isonwall = false;
         }
 
 
