@@ -24,6 +24,7 @@ public sealed class movement : MonoBehaviour
     //Variables control the various actions the player can perform at any time.
     //These are fields which can are public allowing for other sctipts to read them
     //but can only be privately written to.
+    [SerializeField] private bool isonwall = false;
     public bool IsFacingRight { get; private set; }
     public float LastOnGroundTime { get; private set; }
     [SerializeField] private float JumpForce = 0.05f;
@@ -31,10 +32,11 @@ public sealed class movement : MonoBehaviour
     [SerializeField] private int MaxDashTimes = 2;
     private int DashTimes = 0;
     private float HowLongJump = 0.0f;
+    private float StartingGravity;
     #endregion
 
     #region INPUT PARAMETERS
-   [SerializeField] private Vector2 _moveInput;
+    private Vector2 _moveInput;
     #endregion
 
     #region CHECK PARAMETERS
@@ -42,9 +44,10 @@ public sealed class movement : MonoBehaviour
     [Header("Checks")]
     [SerializeField] private Transform _groundCheckPoint;
     [SerializeField] private Vector2 _groundCheckSize = new Vector2(0.49f, 0.03f);
-
-
-
+    [Header("WallCheck")]
+    [SerializeField] private Transform FrontCheck;
+    //  [SerializeField] private Transform BackCheck;
+    [SerializeField] private Vector2 Wallchecksize = new Vector2(0.2f, 0.03f);
     [Header("Camera")]
     [SerializeField]
     private Transform MainCam;
@@ -60,16 +63,18 @@ public sealed class movement : MonoBehaviour
     #region LAYERS & TAGS
     [Header("Layers & Tags")]
     [SerializeField] private LayerMask _groundLayer;
+    [SerializeField] private LayerMask _WallLayer;
     #endregion
 
     private void Start()
     {
         IsFacingRight = true;
+        StartingGravity = RB.gravityScale;
     }
 
     private void Update()
     {
-        if (RB.velocity.y < 0)
+        if (RB.velocity.y < 0 && !isonwall)
         {
             RB.velocity += Vector2.up * Physics2D.gravity.y * (2.0f - 1.0f) * Time.deltaTime;
         }
@@ -81,7 +86,7 @@ public sealed class movement : MonoBehaviour
         _moveInput = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
 
 
-        if (_moveInput.x != 0)
+        if (_moveInput.x != 0 && !isonwall)
             CheckDirectionToFace(_moveInput.x > 0);
         #endregion
         if (DashTimes < MaxDashTimes && _moveInput != new Vector2(0, 1) && Input.GetKeyDown(KeyCode.LeftShift))
@@ -93,21 +98,25 @@ public sealed class movement : MonoBehaviour
         //Ground Check
         if (Physics2D.OverlapBox(_groundCheckPoint.position, _groundCheckSize, 0, _groundLayer))
         {
-
+            isonwall = false;
             DashTimes = 0;
             HowLongJump = 0;
             LastOnGroundTime = 0.1f;
         }
-
+        if (Physics2D.OverlapBox(FrontCheck.position, Wallchecksize, 0, _WallLayer) && Input.GetKeyDown(KeyCode.Space))
+        {
+            StartCoroutine(WallMode());
+        }
         #endregion
 
     }
 
     private void FixedUpdate()
     {
-
-        Run();
-
+        if (!isonwall)
+        {
+            Run();
+        }
         CameraMovement();
 
         if (HowLongJump < 0.15f && Input.GetKey(KeyCode.Space))
@@ -121,6 +130,50 @@ public sealed class movement : MonoBehaviour
     }
 
     //MOVEMENT METHODS
+    private IEnumerator WallMode()
+    {
+
+        if (!isonwall)
+        {
+            Debug.Log("a");
+            isonwall = true;
+            RB.isKinematic = true;
+            RB.velocity = new Vector2(0, 0);
+            bool doonce = false;
+            float timer = 0.0f;
+            Turn();
+
+            yield return new WaitForSeconds(0.05f);
+            while (!Input.GetKeyDown(KeyCode.Space))
+            {
+                timer += Time.deltaTime;
+                Debug.Log("a");
+                if (timer > 0.5f && !doonce)
+                {
+                    doonce = true;
+                    RB.isKinematic = false;
+                    RB.gravityScale = RB.gravityScale / 10;
+                }
+                else if (!isonwall)
+                {
+                    break;
+                }
+                yield return null;
+            }
+            if (isonwall)
+            {
+                RB.isKinematic = false;
+                RB.gravityScale = StartingGravity;
+                isonwall = false;
+                RB.AddForce(transform.localScale * DashForce * 2, ForceMode2D.Impulse);
+            }
+
+
+        }
+
+
+
+    }
     private void CameraMovement()
     {
         desiredposition = transform.position + cameraoffset;
@@ -128,7 +181,7 @@ public sealed class movement : MonoBehaviour
     }
     private void Dash()
     {
-        if (RB.velocity.y >0 || RB.velocity.y < 0)
+        if (RB.velocity.y > 0 || RB.velocity.y < 0)
         {
             DashTimes++;
 
@@ -225,5 +278,6 @@ public sealed class movement : MonoBehaviour
     private void OnDrawGizmos()
     {
         Gizmos.DrawWireCube(_groundCheckPoint.position, _groundCheckSize);
+        Gizmos.DrawWireCube(FrontCheck.position, Wallchecksize);
     }
 }
