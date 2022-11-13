@@ -133,7 +133,7 @@ public sealed class movement : MonoBehaviour
     private IEnumerator WallMode()
     {
 
-        if (!isonwall)
+        if (!isonwall && LastOnGroundTime != 0.1f)
         {
             Debug.Log("a");
             isonwall = true;
