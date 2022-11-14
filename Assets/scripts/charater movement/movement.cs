@@ -24,7 +24,7 @@ public sealed class movement : MonoBehaviour
     //Variables control the various actions the player can perform at any time.
     //These are fields which can are public allowing for other sctipts to read them
     //but can only be privately written to.
-    [SerializeField] private bool isonwall = false;
+     private bool isonwall = false;
     public bool IsFacingRight { get; private set; }
     public float LastOnGroundTime { get; private set; }
     [SerializeField] private float JumpForce = 0.05f;
@@ -36,7 +36,7 @@ public sealed class movement : MonoBehaviour
     #endregion
 
     #region INPUT PARAMETERS
-    private Vector2 _moveInput;
+   [SerializeField] private Vector2 _moveInput;
     #endregion
 
     #region CHECK PARAMETERS
@@ -147,7 +147,7 @@ public sealed class movement : MonoBehaviour
             Turn();
 
             yield return new WaitForSeconds(0.1f);
-            while (!Input.GetKeyDown(KeyCode.Space))
+            while (!Input.GetKeyDown(KeyCode.Space) )
             {
                 
                 timer += Time.deltaTime;
@@ -170,7 +170,7 @@ public sealed class movement : MonoBehaviour
             if (isonwall)
             {
                
-                RB.AddForce(transform.localScale * DashForce * 2, ForceMode2D.Impulse);
+                RB.AddForce(transform.localScale * DashForce * 1.8f, ForceMode2D.Impulse);
             }
             isonwall = false;
         }
