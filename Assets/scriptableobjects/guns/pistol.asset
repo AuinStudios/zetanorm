@@ -15,6 +15,7 @@ MonoBehaviour:
   bullets: 10
   reloadtime: 1.5
   damage: 14.5
-  firerate: 0.05
-  bulletspeed: 30
+  firerate: 0.2
+  bulletspeed: 22
   gunprefab: {fileID: 15064010811755272, guid: 670aadc8331d8c245a739e21fe43a1bd, type: 3}
+  ISAutoFire: 0

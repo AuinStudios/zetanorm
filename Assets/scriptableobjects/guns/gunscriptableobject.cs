@@ -14,7 +14,9 @@ public sealed class gunscriptableobject : ScriptableObject
     public int bullets = 10;
     public float reloadtime = 1.5f;
     public float damage = 14.5f;
-    public float firerate = 5.0f;
-    public float bulletspeed = 100.0f;
+    public float firerate = 2.0f;
+    public float bulletspeed = 30.0f;
     public GameObject gunprefab;
+    [Space(3)]
+    public bool ISAutoFire = false;
 }

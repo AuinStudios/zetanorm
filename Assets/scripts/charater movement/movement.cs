@@ -41,7 +41,7 @@ public sealed class movement : MonoBehaviour
 
     #region CHECK PARAMETERS
     //Set all of these up in the inspector
-    [Header("Checks")]
+    [Header("GroundCheck")]
     [SerializeField] private Transform _groundCheckPoint;
     [SerializeField] private Vector2 _groundCheckSize = new Vector2(0.49f, 0.03f);
     [Header("WallCheck")]
@@ -58,6 +58,8 @@ public sealed class movement : MonoBehaviour
     private Vector3 desiredposition;
     [SerializeField]
     private Vector3 cameraoffset;
+    [Header("PlayerLookingDirection")]
+    [SerializeField] private Transform directionface;
     #endregion
 
     #region LAYERS & TAGS
@@ -170,7 +172,7 @@ public sealed class movement : MonoBehaviour
             if (isonwall)
             {
                
-                RB.AddForce(transform.localScale * DashForce * 1.8f, ForceMode2D.Impulse);
+                RB.AddForce(directionface.localScale * DashForce * 1.8f, ForceMode2D.Impulse);
             }
             isonwall = false;
         }
@@ -262,9 +264,9 @@ public sealed class movement : MonoBehaviour
     private void Turn()
     {
         //stores scale and flips the player along the x axis, 
-        Vector3 scale = transform.localScale;
+        Vector3 scale = directionface.localScale;
         scale.x *= -1;
-        transform.localScale = scale;
+        directionface.localScale = scale;
 
         IsFacingRight = !IsFacingRight;
     }

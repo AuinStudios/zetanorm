@@ -16,7 +16,7 @@ public sealed class Gun : MonoBehaviour
   [SerializeField] private Transform rotationCenter;
 	private Vector3 Pos;
 	private Vector3 dir;
-    private	float radius = 1.0f;
+  [SerializeField]  private	float gunaroundplayeradius = 1.0f;
 	[Header("GunStuff")]
 	private int bullets;
 	private bool canshoot = true;
@@ -32,9 +32,9 @@ public sealed class Gun : MonoBehaviour
 		Pos.z = rotationCenter.position.z - cam.transform.position.z;
 		Pos = cam.ScreenToWorldPoint(Pos);
 		dir = Pos - rotationCenter.position;
-		dir = Vector3.ClampMagnitude(dir, radius);
+		dir = Vector3.ClampMagnitude(dir, gunaroundplayeradius);
 		
-		if(dir.magnitude >= radius)
+		if(dir.magnitude >= gunaroundplayeradius)
         {
 		   
 			transform.position = rotationCenter.position + dir ;
@@ -42,15 +42,23 @@ public sealed class Gun : MonoBehaviour
 		var anglerot = Mathf.Atan2(dirr.y, dirr.x) * Mathf.Rad2Deg;
 		transform.rotation = Quaternion.AngleAxis(anglerot, Vector3.forward);
         }
-		if(Vector2.Distance(transform.position , rotationCenter.position ) > 1f)
-        {
-			dir = Pos * 10 - rotationCenter.position;
-			transform.position = rotationCenter.position + dir;
-		}
-        if (Input.GetKey(KeyCode.Mouse0) && canshoot)
+        //if(Vector2.Distance(transform.position , rotationCenter.position ) > 1f)
+        //{
+        //	dir = Pos * 10 - rotationCenter.position;
+        //	transform.position = rotationCenter.position + dir;
+        //}
+       // if (gunpropertys.ISAutoFire)
+       // {
+	   //
+       // }
+        if (gunpropertys.ISAutoFire && Input.GetKey(KeyCode.Mouse0) && canshoot && bullets > 0)
         {
 			StartCoroutine(shootgun());
         }
+        else if (gunpropertys.ISAutoFire == false && Input.GetKeyDown(KeyCode.Mouse0) && canshoot && bullets > 0)
+        {
+			StartCoroutine(shootgun());
+		}
         if (Input.GetKeyDown(KeyCode.R))
         {
 			bullets = gunpropertys.bullets;
@@ -64,6 +72,7 @@ public sealed class Gun : MonoBehaviour
 		bullets -= 1;
 	  GameObject bullet =  Instantiate(gunpropertys.gunprefab, gunshootfrom.position, gunshootfrom.rotation);
 		Destroy(bullet, 3.0f);
+
 		yield return new WaitForSeconds(gunpropertys.firerate);
 		canshoot = true;
     }
