@@ -21,6 +21,10 @@ public sealed class Gun : MonoBehaviour
 	private int bullets;
 	private bool canshoot = true;
 	[SerializeField] private Transform gunshootfrom;
+	[Header("effects")]
+	[SerializeField] private GameObject gunrecoil;
+	[SerializeField] private GameObject partofgun;
+	[SerializeField] private ParticleSystem muzzleflash;
 	private void Start()
 	{
 		bullets = gunpropertys.bullets;
@@ -36,7 +40,7 @@ public sealed class Gun : MonoBehaviour
 		
 		if(dir.magnitude >= gunaroundplayeradius)
         {
-		   
+		  
 			transform.position = rotationCenter.position + dir ;
 		var dirr = Input.mousePosition - cam.WorldToScreenPoint(transform.position);
 		var anglerot = Mathf.Atan2(dirr.y, dirr.x) * Mathf.Rad2Deg;
@@ -54,10 +58,12 @@ public sealed class Gun : MonoBehaviour
         if (gunpropertys.ISAutoFire && Input.GetKey(KeyCode.Mouse0) && canshoot && bullets > 0)
         {
 			StartCoroutine(shootgun());
+			StartCoroutine(shooteffect());
         }
         else if (gunpropertys.ISAutoFire == false && Input.GetKeyDown(KeyCode.Mouse0) && canshoot && bullets > 0)
         {
 			StartCoroutine(shootgun());
+			StartCoroutine(shooteffect());
 		}
         if (Input.GetKeyDown(KeyCode.R))
         {
@@ -65,16 +71,28 @@ public sealed class Gun : MonoBehaviour
         }
 
 	}
-
+	private IEnumerator shooteffect()
+    {
+        LeanTween.moveLocalX(partofgun, -0.1f, 0.3f).setEaseOutQuint();
+		yield return new WaitForSeconds(0.1f);
+		LeanTween.cancel(partofgun);
+		LeanTween.moveLocalX(partofgun, 0.0f, 0.1f).setEaseOutQuint();
+	}
 	private IEnumerator shootgun()
     {
+		
 		canshoot = false;
 		bullets -= 1;
-	  GameObject bullet =  Instantiate(gunpropertys.gunprefab, gunshootfrom.position, gunshootfrom.rotation);
+		muzzleflash.Play();
+		LeanTween.moveLocalX(gunrecoil, gunpropertys.gunrecoil, 0.1f).setEaseOutQuint();
+		yield return new WaitForSeconds(0.1f);
+		LeanTween.cancel(gunrecoil);
+		LeanTween.moveLocalX(gunrecoil, 0.0f , 0.3f).setEaseOutQuint();
+		GameObject bullet =  Instantiate(gunpropertys.gunprefab, gunshootfrom.position, gunshootfrom.rotation);
 		Destroy(bullet, 3.0f);
 
 		yield return new WaitForSeconds(gunpropertys.firerate);
+		
 		canshoot = true;
     }
 }
-
