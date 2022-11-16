@@ -20,6 +20,7 @@ public sealed class Gun : MonoBehaviour
 	[Header("GunStuff")]
 	private int bullets;
 	private bool canshoot = true;
+	private bool isreloading = false;
 	[SerializeField] private Transform gunshootfrom;
 	[Header("effects")]
 	[SerializeField] private GameObject gunrecoil;
@@ -29,47 +30,52 @@ public sealed class Gun : MonoBehaviour
 	{
 		bullets = gunpropertys.bullets;
 	}
-
-	private void Update()
-	{
+    private void FixedUpdate()
+    {
+		// change the direction of the gun when its on oppsite side
+		gunrecoil.transform.localRotation = transform.localPosition.x <= 0 ? Quaternion.Euler(-180, gunrecoil.transform.localRotation.y, gunrecoil.transform.localRotation.z) : gunrecoil.transform.localRotation = Quaternion.Euler(0, gunrecoil.transform.localRotation.y, gunrecoil.transform.localRotation.z);
+		// circluar postion of the gun
 		Pos = Input.mousePosition;
 		Pos.z = rotationCenter.position.z - cam.transform.position.z;
 		Pos = cam.ScreenToWorldPoint(Pos);
 		dir = Pos - rotationCenter.position;
 		dir = Vector3.ClampMagnitude(dir, gunaroundplayeradius);
-		
-		if(dir.magnitude >= gunaroundplayeradius)
-        {
-		  
-			transform.position = rotationCenter.position + dir ;
-		var dirr = Input.mousePosition - cam.WorldToScreenPoint(transform.position);
-		var anglerot = Mathf.Atan2(dirr.y, dirr.x) * Mathf.Rad2Deg;
-		transform.rotation = Quaternion.AngleAxis(anglerot, Vector3.forward);
-        }
-        //if(Vector2.Distance(transform.position , rotationCenter.position ) > 1f)
-        //{
-        //	dir = Pos * 10 - rotationCenter.position;
-        //	transform.position = rotationCenter.position + dir;
-        //}
-       // if (gunpropertys.ISAutoFire)
-       // {
-	   //
-       // }
+		// clamps it to one spot and doesnt allow it to go inside
+		if (dir.magnitude >= gunaroundplayeradius)
+		{
+
+			transform.position = rotationCenter.position + dir;
+			var dirr = Input.mousePosition - cam.WorldToScreenPoint(transform.position);
+			var anglerot = Mathf.Atan2(dirr.y, dirr.x) * Mathf.Rad2Deg;
+			transform.rotation = Quaternion.AngleAxis(anglerot, Vector3.forward);
+
+		}
+	}
+    private void Update()
+	{
+	    // check if its autofire or not
         if (gunpropertys.ISAutoFire && Input.GetKey(KeyCode.Mouse0) && canshoot && bullets > 0)
         {
 			StartCoroutine(shootgun());
 			StartCoroutine(shooteffect());
         }
-        else if (gunpropertys.ISAutoFire == false && Input.GetKeyDown(KeyCode.Mouse0) && canshoot && bullets > 0)
+        else if (!gunpropertys.ISAutoFire && Input.GetKeyDown(KeyCode.Mouse0) && canshoot && bullets > 0)
         {
 			StartCoroutine(shootgun());
 			StartCoroutine(shooteffect());
 		}
-        if (Input.GetKeyDown(KeyCode.R))
+		// reload
+        if (Input.GetKeyDown(KeyCode.R)&& !isreloading)
         {
-			bullets = gunpropertys.bullets;
+			StartCoroutine(reload());
         }
 
+	}
+	private IEnumerator reload()
+    {
+		isreloading = true;
+		yield return new WaitForSeconds(gunpropertys.reloadtime);
+		bullets = gunpropertys.bullets;
 	}
 	private IEnumerator shooteffect()
     {

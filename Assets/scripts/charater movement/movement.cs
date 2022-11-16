@@ -116,7 +116,6 @@ public sealed class movement : MonoBehaviour
         #endregion
 
     }
-
     private void FixedUpdate()
     {
         if (!isonwall)
