@@ -12,14 +12,14 @@ using UnityEngine;
 public sealed class PlayerRunData : ScriptableObject
 {
 	[Header("Run")]
-	public float runMaxSpeed; //Target speed we want the player to reach.
-	public float runAcceleration; //Time (approx.) time we want it to take for the player to accelerate from 0 to the runMaxSpeed.
+	public float runMaxSpeed = 6.3f; //Target speed we want the player to reach.
+	public float runAcceleration = 0.3f; //Time (approx.) time we want it to take for the player to accelerate from 0 to the runMaxSpeed.
 	[HideInInspector] public float runAccelAmount; //The actual force (multiplied with speedDiff) applied to the player.
-	public float runDecceleration; //Time (approx.) we want it to take for the player to accelerate from runMaxSpeed to 0.
+	public float runDecceleration = 0.19f; //Time (approx.) we want it to take for the player to accelerate from runMaxSpeed to 0.
 	[HideInInspector] public float runDeccelAmount; //Actual force (multiplied with speedDiff) applied to the player .
 	[Space(10)]
-	[Range(0.01f, 1)] public float accelInAir; //Multipliers applied to acceleration rate when airborne.
-	[Range(0.01f, 1)] public float deccelInAir;
+	[Range(0.01f, 1)] public float accelInAir  = 0.251f; //Multipliers applied to acceleration rate when airborne.
+	[Range(0.01f, 1)] public float deccelInAir = 0.296f;
 	public bool doConserveMomentum;
 
 
