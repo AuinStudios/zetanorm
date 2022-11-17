@@ -24,12 +24,13 @@ public sealed class movement : MonoBehaviour
     //     }
     // }
     // #endregion
-    //Scriptable object which holds all the player's movement parameters. If you don't want to use it
-    //just paste in all the parameters, though you will need to manuly change all references in this script
+    //Scriptable object which holds all the player's movement parameters.
+    [Header("data for player movement")]
     [SerializeField]
     private PlayerRunData Data;
 
     #region COMPONENTS
+    [Header("physics component")]
     [SerializeField]
     private Rigidbody2D RB;
     //Script to handle all player animations, all references can be safely removed if you're importing into your own project.
