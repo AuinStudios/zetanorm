@@ -9,6 +9,21 @@ using UnityEngine;
 /// </summary>
 public sealed class movement : MonoBehaviour
 {
+    // #region Singleton
+    // public static movement Instance { get; private set; }
+    // private void Awake()
+    // {
+    //     // If there is an instance, and it's not me, delete myself.
+    //     if (Instance != null && Instance != this)
+    //     {
+    //         Destroy(this);
+    //     }
+    //     else
+    //     {
+    //         Instance = this;
+    //     }
+    // }
+    // #endregion
     //Scriptable object which holds all the player's movement parameters. If you don't want to use it
     //just paste in all the parameters, though you will need to manuly change all references in this script
     [SerializeField]
@@ -24,30 +39,37 @@ public sealed class movement : MonoBehaviour
     //Variables control the various actions the player can perform at any time.
     //These are fields which can are public allowing for other sctipts to read them
     //but can only be privately written to.
-     private bool isonwall = false;
+    private bool isonwall = false;
     public bool IsFacingRight { get; private set; }
     public float LastOnGroundTime { get; private set; }
-    [SerializeField] private float JumpForce = 0.05f;
-    [SerializeField] private float DashForce = 100.0f;
-    [SerializeField] private int MaxDashTimes = 2;
+
     private int DashTimes = 0;
     private float HowLongJump = 0.0f;
     private float StartingGravity;
     #endregion
 
     #region INPUT PARAMETERS
-   [SerializeField] private Vector2 _moveInput;
+    private Vector2 _moveInput;
     #endregion
 
     #region CHECK PARAMETERS
     //Set all of these up in the inspector
+    [Header("Jump Propertys")]
+    [SerializeField] private float JumpForce = 0.05f;
+
+    [Header("dash propertys")]
+    [SerializeField] private float DashForce = 100.0f;
+    [SerializeField] private int MaxDashTimes = 2;
+
     [Header("GroundCheck")]
     [SerializeField] private Transform _groundCheckPoint;
     [SerializeField] private Vector2 _groundCheckSize = new Vector2(0.49f, 0.03f);
+
     [Header("WallCheck")]
     [SerializeField] private Transform FrontCheck;
-     [SerializeField] private Transform BackCheck;
+    [SerializeField] private Transform BackCheck;
     [SerializeField] private Vector2 Wallchecksize = new Vector2(0.2f, 0.03f);
+
     [Header("Camera")]
     [SerializeField]
     private Transform MainCam;
@@ -58,8 +80,11 @@ public sealed class movement : MonoBehaviour
     private Vector3 desiredposition;
     [SerializeField]
     private Vector3 cameraoffset;
-    [Header("PlayerLookingDirection")]
-    [SerializeField] private Transform directionface;
+
+    [Header("wall jump direction")]
+    [SerializeField] private Transform GFXdirection;
+    [Header("pickup coin")]
+    [SerializeField] private Gun coinpickup;
     #endregion
 
     #region LAYERS & TAGS
@@ -76,6 +101,7 @@ public sealed class movement : MonoBehaviour
 
     private void Update()
     {
+        // adds extra gravity
         if (RB.velocity.y < 0 && !isonwall)
         {
             RB.velocity += Vector2.up * Physics2D.gravity.y * (2.0f - 1.0f) * Time.deltaTime;
@@ -83,14 +109,15 @@ public sealed class movement : MonoBehaviour
         #region TIMERS
         LastOnGroundTime -= Time.deltaTime;
         #endregion
-
+        // gets movement input
         #region INPUT HANDLER
         _moveInput = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
 
-
+        // check direction
         if (_moveInput.x != 0 && !isonwall)
             CheckDirectionToFace(_moveInput.x > 0);
         #endregion
+        // dash
         if (DashTimes < MaxDashTimes && _moveInput != new Vector2(0, 1) && Input.GetKeyDown(KeyCode.LeftShift))
         {
             Dash();
@@ -105,11 +132,13 @@ public sealed class movement : MonoBehaviour
             HowLongJump = 0;
             LastOnGroundTime = 0.1f;
         }
+        // check for wall to get on
         if (Physics2D.OverlapBox(FrontCheck.position, Wallchecksize, 0, _WallLayer) && Input.GetKeyDown(KeyCode.Space))
         {
             StartCoroutine(WallMode());
         }
-        if(!Physics2D.OverlapBox(BackCheck.position, Wallchecksize, 0, _WallLayer) && isonwall == true)
+        // check if ur on the wall
+        if (!Physics2D.OverlapBox(BackCheck.position, Wallchecksize, 0, _WallLayer) && isonwall == true)
         {
             isonwall = false;
         }
@@ -123,7 +152,7 @@ public sealed class movement : MonoBehaviour
             Run();
         }
         CameraMovement();
-
+        // jump
         if (HowLongJump < 0.15f && Input.GetKey(KeyCode.Space))
         {
             Jump();
@@ -148,9 +177,9 @@ public sealed class movement : MonoBehaviour
             Turn();
 
             yield return new WaitForSeconds(0.1f);
-            while (!Input.GetKeyDown(KeyCode.Space) )
+            while (!Input.GetKeyDown(KeyCode.Space))
             {
-                
+
                 timer += Time.deltaTime;
                 if (timer > 0.5f && !doonce)
                 {
@@ -162,16 +191,16 @@ public sealed class movement : MonoBehaviour
                 {
                     break;
                 }
-                yield return null;
+                yield return new WaitForFixedUpdate();
             }
-            
+
             RB.isKinematic = false;
             RB.gravityScale = StartingGravity;
-            
+
             if (isonwall)
             {
-               
-                RB.AddForce(directionface.localScale * DashForce * 1.8f, ForceMode2D.Impulse);
+
+                RB.AddForce(GFXdirection.localScale * DashForce * 1.8f, ForceMode2D.Impulse);
             }
             isonwall = false;
         }
@@ -263,9 +292,9 @@ public sealed class movement : MonoBehaviour
     private void Turn()
     {
         //stores scale and flips the player along the x axis, 
-        Vector3 scale = directionface.localScale;
+        Vector3 scale = GFXdirection.localScale;
         scale.x *= -1;
-        directionface.localScale = scale;
+        GFXdirection.localScale = scale;
 
         IsFacingRight = !IsFacingRight;
     }
@@ -273,6 +302,7 @@ public sealed class movement : MonoBehaviour
 
 
     #region CHECK METHODS
+    // checks direction 
     public void CheckDirectionToFace(bool isMovingRight)
     {
         if (isMovingRight != IsFacingRight)
@@ -280,6 +310,15 @@ public sealed class movement : MonoBehaviour
     }
     #endregion
 
+    // PickUpCoins
+    private void OnTriggerStay2D(Collider2D collision)
+    {
+        if (collision.attachedRigidbody == false && collision.CompareTag("coin") && coinpickup.coinamount < coinpickup.gunpropertys.coinsallowed)
+        {
+            coinpickup.coinamount += 1;
+            Destroy(collision.gameObject);
+        }
+    }
     private void OnDrawGizmos()
     {
         Gizmos.DrawWireCube(_groundCheckPoint.position, _groundCheckSize);
