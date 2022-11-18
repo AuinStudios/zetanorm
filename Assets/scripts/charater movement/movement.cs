@@ -56,20 +56,20 @@ public sealed class movement : MonoBehaviour
     #region CHECK PARAMETERS
     //Set all of these up in the inspector
     [Header("Jump Propertys")]
-    [SerializeField] private float JumpForce = 0.05f;
+    [SerializeField] private float JumpForce = 0.3f;
 
     [Header("dash propertys")]
-    [SerializeField] private float DashForce = 100.0f;
+    [SerializeField] private float DashForce = 1.3f;
     [SerializeField] private int MaxDashTimes = 2;
 
     [Header("GroundCheck")]
     [SerializeField] private Transform _groundCheckPoint;
-    [SerializeField] private Vector2 _groundCheckSize = new Vector2(0.49f, 0.03f);
+    [SerializeField] private Vector2 _groundCheckSize = new Vector2(0.23f, 0.03f);
 
     [Header("WallCheck")]
     [SerializeField] private Transform FrontCheck;
     [SerializeField] private Transform BackCheck;
-    [SerializeField] private Vector2 Wallchecksize = new Vector2(0.2f, 0.03f);
+    [SerializeField] private Vector2 Wallchecksize = new Vector2(0.11f, 0.03f);
 
     [Header("Camera")]
     [SerializeField]
@@ -192,7 +192,7 @@ public sealed class movement : MonoBehaviour
                 {
                     break;
                 }
-                yield return new WaitForFixedUpdate();
+                yield return null;
             }
 
             RB.isKinematic = false;

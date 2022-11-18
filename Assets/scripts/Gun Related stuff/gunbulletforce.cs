@@ -71,13 +71,14 @@ public sealed class gunbulletforce : MonoBehaviour
             transform.rotation = Quaternion.Euler(transform.rotation.x, transform.rotation.y, Random.Range(0, 360));
         }
         yield return new WaitUntil(() => t >= enemymanager.Instance.enemys.Count && target != null);
-        // make inf loop for the realtime looking direction
+        // make inf loop for the realtime looking direction untll the coin breaks
         while (t < Mathf.Infinity)
         {
-            Debug.Log(dSqrToTarget);
+         
             var dir = target.position - transform.position;
             var angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
-            transform.rotation = dSqrToTarget > closestDistanceSqr / 2? Quaternion.AngleAxis(angle + (target.position - transform.position).magnitude, Vector3.forward) : Quaternion.AngleAxis(angle, Vector3.forward);
+            transform.rotation = Quaternion.AngleAxis(angle + dir.x  , Vector3.forward);
+            
             yield return new WaitForFixedUpdate();
         }
     }
