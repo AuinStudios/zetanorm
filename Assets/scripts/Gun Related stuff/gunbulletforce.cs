@@ -14,7 +14,7 @@ public sealed class gunbulletforce : MonoBehaviour
         up,
         down,
         right,
-        left
+        left,
     }
     public enum Type
     {
@@ -26,17 +26,19 @@ public sealed class gunbulletforce : MonoBehaviour
     [SerializeField] private Rigidbody2D rig;
     [SerializeField] private Direction direct = Direction.right;
     [SerializeField] private Type typeofthing = Type.bullet;
+    private Transform target;
     // Start is called before the first frame update
     private void Start()
     {
         switch (typeofthing)
         {
             case Type.coin:
-                rig.AddForce(dir() * gunproperty.coinforce, ForceMode2D.Impulse);
-                StartCoroutine(deflectonearbyenemy());
+                rig.AddForce(new Vector3(transform.right.x * gunproperty.coinforce / 4f, dir().y * gunproperty.coinforce, 0), ForceMode2D.Impulse);
+                StartCoroutine(getarget());
                 break;
             case Type.bullet:
                 rig.AddForce(transform.right * gunproperty.bulletspeed, ForceMode2D.Impulse);
+
                 break;
             case Type.stickycoin:
                 break;
@@ -45,60 +47,102 @@ public sealed class gunbulletforce : MonoBehaviour
         }
 
     }
-    private IEnumerator deflectonearbyenemy()
+    private Transform getcloseistenemy()
     {
-        int t = 0;
-        float closestDistanceSqr = 150;
-        Transform target = null;
+        target = null;
         float lastdistance = Mathf.Infinity;
         float dSqrToTarget = 0.0f;
         foreach (Transform i in enemymanager.Instance.enemys)
         {
-
             Vector3 distance = i.position - transform.position;
             dSqrToTarget = distance.sqrMagnitude;
-            if (dSqrToTarget < closestDistanceSqr && dSqrToTarget < lastdistance)
+            if ( dSqrToTarget < lastdistance)
             {
                 lastdistance = dSqrToTarget;
                 target = i.transform;
-            }
-            // check the size of the list
-            t++;
 
+            }
         }
-        if(target == null)
+        return target;
+    }
+    private IEnumerator getarget()
+    {
+        target = getcloseistenemy();
+        if (target == null)
         {
             transform.rotation = Quaternion.Euler(transform.rotation.x, transform.rotation.y, Random.Range(0, 360));
         }
-        yield return new WaitUntil(() => t >= enemymanager.Instance.enemys.Count && target != null);
+        yield return new WaitUntil(() => target != null);
         // make inf loop for the realtime looking direction untll the coin breaks
-        while (t < Mathf.Infinity)
+        //  Rigidbody2D temp = target.GetComponent<Rigidbody2D>();
+        while (0 < Mathf.Infinity)
         {
-         
             var dir = target.position - transform.position;
             var angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
-            transform.rotation = Quaternion.AngleAxis(angle + dir.x  , Vector3.forward);
-            
+            transform.rotation = Quaternion.AngleAxis(angle, Vector3.forward);
+
             yield return new WaitForFixedUpdate();
         }
+    }
+    //Vector3 PredictPosition(GameObject target)
+    //{
+    //    Vector3 velocity = target.GetComponent<Rigidbody2D>().velocity;
+    //    float time = Vector3.Distance(transform.position, target.transform.position) / (gunproperty.bulletspeed);
+    //    Vector3 coef = velocity * time;
+    //    Vector3 newTarget = target.transform.position + coef;
+    //    return newTarget;
+    //}
+    Vector2 PredictPosition(Rigidbody2D targetRigid)
+    {
+        Vector3 pos = targetRigid.position;
+        Vector3 dir = targetRigid.velocity;
+
+        float dist = (pos - transform.position).magnitude;
+
+        return pos + (dist / gunproperty.bulletspeed) * dir;
     }
     private void OnTriggerEnter2D(Collider2D collision)
     {
         if (collision.transform.CompareTag("bullet") && gameObject.transform.CompareTag("coin"))
         {
-            StopAllCoroutines();
+          StopAllCoroutines();
             collision.attachedRigidbody.velocity = new Vector2(0, 0);
             collision.transform.position = transform.position;
             collision.transform.rotation = transform.rotation;
-            collision.attachedRigidbody.AddForce(transform.right * gunproperty.bulletspeed, ForceMode2D.Impulse);
+            
             Destroy(gameObject);
-
         }
-        else if (collision.transform.CompareTag("Untagged"))
+        else if (collision.transform.CompareTag("coin"))
+        {
+            target = getcloseistenemy();
+           // StartCoroutine(movetowards());
+             float gunspeed = gunproperty.bulletspeed / gunproperty.bulletspeedrag;
+            float totalspeed = gunspeed * (target.position - transform.position).magnitude;
+            LeanTween.move(gameObject, PredictPosition(target.GetComponent<Rigidbody2D>()), totalspeed).setEaseLinear();
+            
+        }
+        else if (collision.transform == target)
+        {
+            Debug.Log("hit");
+        }
+        else
         {
             Destroy(gameObject);
         }
     }
+   // private IEnumerator movetowards()
+   // {
+   //    
+   //     float time = 0f;
+   //     while (target != null)
+   //     {
+   //         time += gunspeed * Time.deltaTime;
+   //      transform.position =   Vector2.Lerp(transform.position, PredictPosition(target.GetComponent<Rigidbody2D>()), time / gunspeed);
+   //         yield return new WaitForFixedUpdate();
+   //     }
+   //     
+   //     
+   // }
     private Vector3 dir()
     {
         Vector3 direction = Vector3.zero;

@@ -20,6 +20,8 @@ public sealed class gunscriptableobject : ScriptableObject
     public float firerate = 2.0f;
     [Range(10, 100)]
     public float bulletspeed = 22.0f;
+    [Range(1000, 10000)]
+    public float bulletspeedrag = 1000.0f;
     [Range(0.0f, -0.3f)]
     public float gunrecoil = -0.05f;
     [Header("coinmechanic")]

@@ -35,10 +35,12 @@ public sealed class Gun : MonoBehaviour
     [Header("mechanics")]
     [SerializeField] private Transform coinspawnpoint;
     [SerializeField] private Transform InstantiateCoin;
+    private Vector3 coinpos;
     [HideInInspector]
     public int coinamount;
     private void Start()
     {
+        coinpos = coinspawnpoint.localPosition;
         bullets = gunpropertys.bullets;
         coinamount = gunpropertys.coinsallowed;
     }
@@ -46,13 +48,18 @@ public sealed class Gun : MonoBehaviour
     {
         // change the direction of the gun when its on oppsite side
         gunrecoil.transform.localRotation = transform.localPosition.x <= 0 ? Quaternion.Euler(-180, gunrecoil.transform.localRotation.y, gunrecoil.transform.localRotation.z) : gunrecoil.transform.localRotation = Quaternion.Euler(0, gunrecoil.transform.localRotation.y, gunrecoil.transform.localRotation.z);
+        // temporay
+        coinspawnpoint.transform.localPosition = transform.localPosition.x <= 0 ? new Vector3(-coinpos.x , coinpos.y , coinpos.z) : coinpos;
+        coinspawnpoint.localRotation = Quaternion.Euler(gunrecoil.transform.localRotation.y , gunrecoil.transform.localRotation.x * 180 , gunrecoil.transform.localRotation.z);
         // circluar postion of the gun
+        // temporay
         Pos = Input.mousePosition;
         Pos.z = rotationCenter.position.z - cam.transform.position.z;
         Pos = cam.ScreenToWorldPoint(Pos);
         dir = Pos - rotationCenter.position;
         dir = Vector3.ClampMagnitude(dir, gunaroundplayeradius);
         // clamps it to one spot and doesnt allow it to go inside
+        // temporay
         if (dir.magnitude >= gunaroundplayeradius)
         {
 
@@ -83,15 +90,18 @@ public sealed class Gun : MonoBehaviour
         }
         if (Input.GetKeyDown(KeyCode.F) && coinamount > 0)
         {
-            Instantiate(InstantiateCoin, coinspawnpoint.position, Quaternion.identity);
+            Instantiate(InstantiateCoin, coinspawnpoint.position, coinspawnpoint.rotation);
             coinamount -= 1;
         }
     }
     private IEnumerator reload()
     {
         isreloading = true;
+        canshoot = false;
         yield return new WaitForSeconds(gunpropertys.reloadtime);
         bullets = gunpropertys.bullets;
+        isreloading = false;
+        canshoot = true;
     }
     private IEnumerator shooteffect()
     {
