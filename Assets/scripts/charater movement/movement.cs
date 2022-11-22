@@ -46,6 +46,7 @@ public sealed class movement : MonoBehaviour
 
     private int DashTimes = 0;
     //private float HowLongJump = 0.0f;
+   
     private float StartingGravity;
     #endregion
 
@@ -55,13 +56,14 @@ public sealed class movement : MonoBehaviour
 
     #region CHECK PARAMETERS
     //Set all of these up in the inspector
-
+    [Header("walljump Propertys")]
+   [SerializeField] private float walljumpforce = 1.2f;
     [Header("Jump Propertys")]
     [SerializeField] private float JumpForce = 3.0f;
     [SerializeField] private float jumpcut = 0.85f;
     private bool isjumping = false;
     [Header("dash propertys")]
-    [SerializeField] private float DashForce = 1.3f;
+    [SerializeField] private float DashForce = 0.9f;
     [SerializeField] private int MaxDashTimes = 2;
     [SerializeField] private SpriteRenderer afterimage;
     [Header("GroundCheck")]
@@ -85,7 +87,7 @@ public sealed class movement : MonoBehaviour
     private Vector3 cameraoffset;
 
     [Header("wall jump direction")]
-    [SerializeField] private Transform GFXdirection;
+    [SerializeField] private SpriteRenderer GFXdirection;
     [Header("pickup coin")]
     [SerializeField] private Gun coinpickup;
     #endregion
@@ -136,7 +138,6 @@ public sealed class movement : MonoBehaviour
         else if ( Input.GetKeyUp(KeyCode.Space)&& isjumping  && DashTimes == 0)
         {
             isjumping = false;
-            Debug.Log("wtf");
            if(RB.velocity.y > 0)
             {
               RB.AddForce(Vector2.down * RB.velocity.y * (1 - jumpcut), ForceMode2D.Impulse);
@@ -218,7 +219,7 @@ public sealed class movement : MonoBehaviour
             if (isonwall)
             {
 
-                RB.AddForce(GFXdirection.localScale * DashForce * 3.0f, ForceMode2D.Impulse);
+                RB.AddForce(GFXdirection.transform.localScale * walljumpforce, ForceMode2D.Impulse);
             }
             isonwall = false;
         }
@@ -240,26 +241,37 @@ public sealed class movement : MonoBehaviour
 
             DashTimes++;
             Vector3.Normalize(_moveInput);
-            RB.AddForce(_moveInput * DashForce, ForceMode2D.Impulse);
+            RB.gravityScale = 0;
+            RB.velocity =  new Vector2( _moveInput.x * DashForce , _moveInput.y * DashForce  / 1.5f);
+
             //HowLongJump = 1;
-            if (DashTimes == 1)
+           // if (DashTimes == 1)
+           // {
+           //     int time = 0;
+           //     int pickbetweencolor = 0;
+           //     while (time < Mathf.Infinity && LastOnGroundTime != 0.1f && !isonwall)
+           //     {
+           //         time++;
+           //         SpriteRenderer spawnafterimage = Instantiate(afterimage, transform.position, Quaternion.identity);
+           //         pickbetweencolor = Random.Range(0, 2);
+           //         spawnafterimage.color = pickbetweencolor > 0 ? Color.green : Color.blue;
+           //         spawnafterimage.transform.localScale = GFXdirection.localScale;
+           //         Destroy(spawnafterimage.gameObject, 1);
+           //         yield return new WaitForSeconds(0.25f);
+           //
+           //         yield return new WaitForFixedUpdate();
+           //     }
+           // }
+            yield return new WaitForSeconds(0.2f);
+           
+            RB.gravityScale = StartingGravity;
+            float timer = 0;
+           while(timer < 0.05f)
             {
-                int time = 0;
-                int pickbetweencolor = 0;
-                while (time < Mathf.Infinity && LastOnGroundTime != 0.1f && !isonwall)
-                {
-                    time++;
-                    SpriteRenderer spawnafterimage = Instantiate(afterimage, transform.position, Quaternion.identity);
-                    pickbetweencolor = Random.Range(0, 2);
-                    spawnafterimage.color = pickbetweencolor > 0 ? Color.green : Color.blue;
-                    spawnafterimage.transform.localScale = GFXdirection.localScale;
-                    Destroy(spawnafterimage.gameObject, 1);
-                    yield return new WaitForSeconds(0.25f);
-
-                    yield return new WaitForFixedUpdate();
-                }
+                timer += 0.3f * Time.deltaTime;
+                RB.velocity = Vector3.Lerp(RB.velocity, Vector3.zero, timer / 1);
+                yield return null;
             }
-
         }
 
     }
@@ -329,9 +341,9 @@ public sealed class movement : MonoBehaviour
     private void Turn()
     {
         //stores scale and flips the player along the x axis, 
-        Vector3 scale = GFXdirection.localScale;
+        Vector3 scale = GFXdirection.transform.localScale;
         scale.x *= -1;
-        GFXdirection.localScale = scale;
+        GFXdirection.transform.localScale = scale;
 
         IsFacingRight = !IsFacingRight;
     }

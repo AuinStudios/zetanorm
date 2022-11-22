@@ -19206,9 +19206,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Data: {fileID: 11400000, guid: d91c51c0a42ff784b97c0b038752b6f4, type: 2}
   RB: {fileID: 1732225759}
+  walljumpforce: 3
   JumpForce: 3
   jumpcut: 0.85
-  DashForce: 0.9
+  DashForce: 11
   MaxDashTimes: 2
   afterimage: {fileID: 7548487916272701104, guid: d1874a6ca535bac4396a7a695a934ffc, type: 3}
   _groundCheckPoint: {fileID: 1993837186}
@@ -19219,7 +19220,7 @@ MonoBehaviour:
   MainCam: {fileID: 519420032}
   SmoothTime: 0.094
   cameraoffset: {x: 0, y: -0.2, z: -12.14}
-  GFXdirection: {fileID: 606143652}
+  GFXdirection: {fileID: 606143653}
   coinpickup: {fileID: 378628583}
   _groundLayer:
     serializedVersion: 2
@@ -19237,7 +19238,7 @@ Rigidbody2D:
   m_GameObject: {fileID: 1732225757}
   m_BodyType: 0
   m_Simulated: 1
-  m_UseFullKinematicContacts: 0
+  m_UseFullKinematicContacts: 1
   m_UseAutoMass: 0
   m_Mass: 0.3
   m_LinearDrag: 0
