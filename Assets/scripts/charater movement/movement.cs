@@ -104,7 +104,10 @@ public sealed class movement : MonoBehaviour
     private void Update()
     {
         // adds extra gravity
-       
+        if (RB.velocity.y < 0 && !isonwall)
+        {
+            RB.velocity += Vector2.up * Physics2D.gravity.y * (2f - 1.0f) * Time.deltaTime;
+        }
         #region TIMERS
         LastOnGroundTime -= Time.deltaTime;
         #endregion
@@ -126,15 +129,10 @@ public sealed class movement : MonoBehaviour
         //Ground Check
         if (Physics2D.OverlapBox(_groundCheckPoint.position, _groundCheckSize, 0, _groundLayer))
         {
-            RB.velocity = Vector2.zero;
             isonwall = false;
             DashTimes = 0;
             HowLongJump = 0;
             LastOnGroundTime = 0.1f;
-        }
-        else
-        {
-            RB.velocity += Vector2.up * Physics2D.gravity.y * (JumpForce - 1.0f) * Time.deltaTime;
         }
         // check for wall to get on
         if (Physics2D.OverlapBox(FrontCheck.position, Wallchecksize, 0, _WallLayer) && Input.GetKeyDown(KeyCode.Space))
@@ -150,10 +148,7 @@ public sealed class movement : MonoBehaviour
 
     }
     private void FixedUpdate()
-    { 
-      
-           
-       
+    {
         if (!isonwall)
         {
             Run();
@@ -306,7 +301,7 @@ public sealed class movement : MonoBehaviour
         float movement = speedDif * accelRate;
 
         //Convert this to a vector and apply to rigidbody
-        RB.velocity = (movement * Vector2.right);
+        RB.AddForce(movement * Vector2.right, ForceMode2D.Force);
 
         /*
 		 * For those interested here is what AddForce() will do
