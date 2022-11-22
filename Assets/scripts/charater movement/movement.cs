@@ -55,13 +55,14 @@ public sealed class movement : MonoBehaviour
 
     #region CHECK PARAMETERS
     //Set all of these up in the inspector
+
     [Header("Jump Propertys")]
     [SerializeField] private float JumpForce = 0.3f;
 
     [Header("dash propertys")]
     [SerializeField] private float DashForce = 1.3f;
     [SerializeField] private int MaxDashTimes = 2;
-
+    [SerializeField] private SpriteRenderer afterimage;
     [Header("GroundCheck")]
     [SerializeField] private Transform _groundCheckPoint;
     [SerializeField] private Vector2 _groundCheckSize = new Vector2(0.23f, 0.03f);
@@ -103,10 +104,7 @@ public sealed class movement : MonoBehaviour
     private void Update()
     {
         // adds extra gravity
-        if (RB.velocity.y < 0 && !isonwall)
-        {
-            RB.velocity += Vector2.up * Physics2D.gravity.y * (2.0f - 1.0f) * Time.deltaTime;
-        }
+       
         #region TIMERS
         LastOnGroundTime -= Time.deltaTime;
         #endregion
@@ -119,19 +117,24 @@ public sealed class movement : MonoBehaviour
             CheckDirectionToFace(_moveInput.x > 0);
         #endregion
         // dash
-        if (DashTimes < MaxDashTimes && _moveInput != new Vector2(0, 1) && Input.GetKeyDown(KeyCode.LeftShift))
+        if (DashTimes < MaxDashTimes && _moveInput != new Vector2(0, 1) && _moveInput != new Vector2(0, 0) && Input.GetKeyDown(KeyCode.LeftShift))
         {
-            Dash();
-        }
+            StartCoroutine(Dash());
 
+        }
         #region COLLISION CHECKS
         //Ground Check
         if (Physics2D.OverlapBox(_groundCheckPoint.position, _groundCheckSize, 0, _groundLayer))
         {
+            RB.velocity = Vector2.zero;
             isonwall = false;
             DashTimes = 0;
             HowLongJump = 0;
             LastOnGroundTime = 0.1f;
+        }
+        else
+        {
+            RB.velocity += Vector2.up * Physics2D.gravity.y * (JumpForce - 1.0f) * Time.deltaTime;
         }
         // check for wall to get on
         if (Physics2D.OverlapBox(FrontCheck.position, Wallchecksize, 0, _WallLayer) && Input.GetKeyDown(KeyCode.Space))
@@ -147,7 +150,10 @@ public sealed class movement : MonoBehaviour
 
     }
     private void FixedUpdate()
-    {
+    { 
+      
+           
+       
         if (!isonwall)
         {
             Run();
@@ -214,17 +220,36 @@ public sealed class movement : MonoBehaviour
         desiredposition = transform.position + cameraoffset;
         MainCam.position = Vector3.SmoothDamp(MainCam.position, desiredposition, ref smoothdampvelocity, SmoothTime);
     }
-    private void Dash()
+    private IEnumerator Dash()
     {
+
         if (RB.velocity.y > 0 || RB.velocity.y < 0)
         {
-            DashTimes++;
 
+
+            DashTimes++;
             Vector3.Normalize(_moveInput);
             RB.AddForce(new Vector2(_moveInput.x * DashForce, _moveInput.y), ForceMode2D.Impulse);
             HowLongJump = 1;
-        }
+            if (DashTimes == 1)
+            {
+                int time = 0;
+                int pickbetweencolor = 0;
+                while (time < DashTimes + 5)
+                {
+                    time++;
+                    SpriteRenderer spawnafterimage = Instantiate(afterimage, transform.position, Quaternion.identity);
+                    pickbetweencolor = Random.Range(0, 2);
+                    spawnafterimage.color = pickbetweencolor > 0 ? Color.green : Color.blue;
+                    spawnafterimage.transform.localScale = GFXdirection.localScale;
+                    Destroy(spawnafterimage.gameObject, 1);
+                    yield return new WaitForSeconds(0.25f);
 
+                    yield return new WaitForFixedUpdate();
+                }
+            }
+
+        }
 
     }
     private void Jump()
@@ -281,7 +306,7 @@ public sealed class movement : MonoBehaviour
         float movement = speedDif * accelRate;
 
         //Convert this to a vector and apply to rigidbody
-        RB.AddForce(movement * Vector2.right, ForceMode2D.Force);
+        RB.velocity = (movement * Vector2.right);
 
         /*
 		 * For those interested here is what AddForce() will do
