@@ -42,10 +42,10 @@ public sealed class movement : MonoBehaviour
     //but can only be privately written to.
     private bool isonwall = false;
     public bool IsFacingRight { get; private set; }
-    public float LastOnGroundTime { get; private set; }
+    private float LastOnGroundTime = 0.1f;
 
     private int DashTimes = 0;
-    private float HowLongJump = 0.0f;
+    //private float HowLongJump = 0.0f;
     private float StartingGravity;
     #endregion
 
@@ -57,8 +57,9 @@ public sealed class movement : MonoBehaviour
     //Set all of these up in the inspector
 
     [Header("Jump Propertys")]
-    [SerializeField] private float JumpForce = 0.3f;
-
+    [SerializeField] private float JumpForce = 3.0f;
+    [SerializeField] private float jumpcut = 0.85f;
+    private bool isjumping = false;
     [Header("dash propertys")]
     [SerializeField] private float DashForce = 1.3f;
     [SerializeField] private int MaxDashTimes = 2;
@@ -108,9 +109,9 @@ public sealed class movement : MonoBehaviour
         {
             RB.velocity += Vector2.up * Physics2D.gravity.y * (2f - 1.0f) * Time.deltaTime;
         }
-        #region TIMERS
-        LastOnGroundTime -= Time.deltaTime;
-        #endregion
+      //  #region TIMERS
+       // LastOnGroundTime -= Time.deltaTime;
+     //   #endregion
         // gets movement input
         #region INPUT HANDLER
         _moveInput = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
@@ -120,10 +121,28 @@ public sealed class movement : MonoBehaviour
             CheckDirectionToFace(_moveInput.x > 0);
         #endregion
         // dash
-        if (DashTimes < MaxDashTimes && _moveInput != new Vector2(0, 1) && _moveInput != new Vector2(0, 0) && Input.GetKeyDown(KeyCode.LeftShift))
+        if (DashTimes < MaxDashTimes && _moveInput != new Vector2(0, 1) && _moveInput != new Vector2(0, 0) && Input.GetKeyDown(KeyCode.LeftShift) && !isonwall)
         {
             StartCoroutine(Dash());
 
+        }
+        // jump
+        if (Input.GetKeyDown(KeyCode.Space) && LastOnGroundTime >= 0.01f )
+        {
+            //   HowLongJump < 0.15f;
+            isjumping = true;
+            RB.AddForce(Vector2.up * JumpForce, ForceMode2D.Impulse);
+        }
+        else if ( Input.GetKeyUp(KeyCode.Space)&& isjumping  && DashTimes == 0)
+        {
+            isjumping = false;
+            Debug.Log("wtf");
+           if(RB.velocity.y > 0)
+            {
+              RB.AddForce(Vector2.down * RB.velocity.y * (1 - jumpcut), ForceMode2D.Impulse);
+            }
+            
+            //HowLongJump = 1;
         }
         #region COLLISION CHECKS
         //Ground Check
@@ -131,8 +150,12 @@ public sealed class movement : MonoBehaviour
         {
             isonwall = false;
             DashTimes = 0;
-            HowLongJump = 0;
+           // HowLongJump = 0;
             LastOnGroundTime = 0.1f;
+        }
+        else
+        {
+            LastOnGroundTime -= Time.deltaTime;
         }
         // check for wall to get on
         if (Physics2D.OverlapBox(FrontCheck.position, Wallchecksize, 0, _WallLayer) && Input.GetKeyDown(KeyCode.Space))
@@ -155,14 +178,7 @@ public sealed class movement : MonoBehaviour
         }
         CameraMovement();
         // jump
-        if (HowLongJump < 0.15f && Input.GetKey(KeyCode.Space))
-        {
-            Jump();
-        }
-        else if (Input.GetKeyUp(KeyCode.Space))
-        {
-            HowLongJump = 1;
-        }
+        
     }
 
     //MOVEMENT METHODS
@@ -202,7 +218,7 @@ public sealed class movement : MonoBehaviour
             if (isonwall)
             {
 
-                RB.AddForce(GFXdirection.localScale * DashForce * 1.8f, ForceMode2D.Impulse);
+                RB.AddForce(GFXdirection.localScale * DashForce * 3.0f, ForceMode2D.Impulse);
             }
             isonwall = false;
         }
@@ -224,13 +240,13 @@ public sealed class movement : MonoBehaviour
 
             DashTimes++;
             Vector3.Normalize(_moveInput);
-            RB.AddForce(new Vector2(_moveInput.x * DashForce, _moveInput.y), ForceMode2D.Impulse);
-            HowLongJump = 1;
+            RB.AddForce(_moveInput * DashForce, ForceMode2D.Impulse);
+            //HowLongJump = 1;
             if (DashTimes == 1)
             {
                 int time = 0;
                 int pickbetweencolor = 0;
-                while (time < DashTimes + 5)
+                while (time < Mathf.Infinity && LastOnGroundTime != 0.1f && !isonwall)
                 {
                     time++;
                     SpriteRenderer spawnafterimage = Instantiate(afterimage, transform.position, Quaternion.identity);
@@ -247,13 +263,13 @@ public sealed class movement : MonoBehaviour
         }
 
     }
-    private void Jump()
-    {
-        float force = JumpForce;
-        force += Time.deltaTime * 2.5f;
-        HowLongJump += Time.deltaTime;
-        RB.AddForce(Vector2.up * force, ForceMode2D.Impulse);
-    }
+   // private void Jump()
+   // {
+   //     //float force = JumpForce;
+   //   //  force += Time.deltaTime * 2.5f;
+   //   //  HowLongJump += Time.deltaTime;
+   //     RB.AddForce(Vector2.up * JumpForce, ForceMode2D.Impulse);
+   // }
     #region RUN METHODS
     private void Run()
     {
